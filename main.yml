@@ -1,43 +1,25 @@
-on: [push]
-name: Linux_Container_Workflow
+trigger:
+- main
 
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+pool:
+  vmImage: 'ubuntu-latest'
 
-    steps:
-      # Checkout do repositório
-      - name: 'Checkout GitHub Action'
-        uses: actions/checkout@v3
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.12'
 
-      # Login no Azure via CLI
-      - name: 'Login via Azure CLI'
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+- script: |
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+  displayName: 'Instalar dependências'
 
-      # Login no Azure Container Registry (ACR)
-      - name: 'Build and push image'
-        uses: azure/docker-login@v1
-        with:
-          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
+- script: |
+    python -m py_compile jokenpo.py
+  displayName: 'Validar código Python'
 
-      # Build da imagem e push para o ACR
-      - run: |
-          docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/jokenpo:${{ github.sha }}
-          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/jokenpo:${{ github.sha }}
-
-      # Deploy para o Azure Container Instances (ACI)
-      - name: 'Deploy to Azure Container Instances'
-        uses: 'azure/aci-deploy@v1'
-        with:
-          resource-group: ${{ secrets.RESOURCE_GROUP }}
-          dns-name-label: ${{ secrets.RESOURCE_GROUP }}-${{ github.run_number }}
-          image: ${{ secrets.REGISTRY_LOGIN_SERVER }}/jokenpo:${{ github.sha }}
-          registry-login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-          registry-username: ${{ secrets.REGISTRY_USERNAME }}
-          registry-password: ${{ secrets.REGISTRY_PASSWORD }}
-          name: jokenpo-aci
-          location: 'eastus'
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '.'
+    ArtifactName: 'jokenpo-api'
+    publishLocation: 'Container'
