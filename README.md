@@ -26,5 +26,6 @@ Este repositório contém um jogo simples de **jokenpô** (pedra, papel e tesour
 git clone https://github.com/seu-usuario/jokenpo-azure.git
 cd jokenpo-azure
 
+## Pipeline CI/CD configurada com Azure DevOps
 
 
