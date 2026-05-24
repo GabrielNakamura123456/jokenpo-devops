@@ -28,4 +28,4 @@ cd jokenpo-azure
 
 ## Pipeline CI/CD configurada com Azure DevOps
 
-
+teste PR
